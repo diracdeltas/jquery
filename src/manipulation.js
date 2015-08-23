@@ -563,7 +563,8 @@ jQuery.fn.extend({
 
 	html: function( value ) {
 		return access( this, function( value ) {
-			var elem = this[ 0 ] || {},
+			var oldValue,
+        elem = this[ 0 ] || {},
 				i = 0,
 				l = this.length;
 
@@ -574,19 +575,21 @@ jQuery.fn.extend({
 			}
 
 			// See if we can take a shortcut and just use innerHTML
-			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+      oldValue = value;
+      value = typeof value === "string" && !rnoInnerhtml.test( value ) &&
 				( support.htmlSerialize || !rnoshimcache.test( value )  ) &&
 				( support.leadingWhitespace || !rleadingWhitespace.test( value ) ) &&
-				!wrapMap[ (rtagName.exec( value ) || [ "", "" ])[ 1 ].toLowerCase() ] ) {
+				!wrapMap[ (rtagName.exec( value ) || [ "", "" ])[ 1 ].toLowerCase() ] &&
+				value.replace( rxhtmlTag, "<$1></$2>" );
 
-				value = value.replace( rxhtmlTag, "<$1></$2>" );
-
+      if (value) {
 				try {
 					for (; i < l; i++ ) {
 						// Remove element nodes and prevent memory leaks
 						elem = this[i] || {};
 						if ( elem.nodeType === 1 ) {
 							jQuery.cleanData( getAll( elem, false ) );
+              // Sets innerHTML to "true" when processed by uglify-js@2.4.23
 							elem.innerHTML = value;
 						}
 					}
@@ -595,10 +598,10 @@ jQuery.fn.extend({
 
 				// If using innerHTML throws an exception, use the fallback method
 				} catch(e) {}
-			}
+      }
 
 			if ( elem ) {
-				this.empty().append( value );
+				this.empty().append( oldValue );
 			}
 		}, null, value, arguments.length );
 	},
