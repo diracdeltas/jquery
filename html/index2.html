@@ -1,0 +1,17 @@
+<html>
+    <script src="../dist/jquery.min.js"></script>
+    <button>click me to see if special event handlers are called!</button>
+    <div>FAIL</div>
+    <script>
+        // Add a special event hook for onclick removal
+        jQuery.event.special.click.remove = function(handleObj) {
+            $('div').text('SUCCESS');
+        };
+        $('button').click(function myHandler(e) {
+            // Trigger the special event hook
+            $('button').off('click');
+            // Re-add the click handler
+            $('button').click(myHandler);
+        });
+    </script>
+</html>
