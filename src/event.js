@@ -157,7 +157,7 @@ jQuery.event = {
 		var j, handleObj, tmp,
 			origCount, t, events,
 			special, handlers, type,
-			namespaces, origType,
+			namespaces, origType, spliced,
 			elemData = jQuery.hasData( elem ) && jQuery._data( elem );
 
 		if ( !elemData || !(events = elemData.events) ) {
@@ -190,19 +190,21 @@ jQuery.event = {
 			while ( j-- ) {
 				handleObj = handlers[ j ];
 
-				if ( ( mappedTypes || origType === handleObj.origType ) &&
+				spliced = ( mappedTypes || origType === handleObj.origType ) &&
 					( !handler || handler.guid === handleObj.guid ) &&
 					( !tmp || tmp.test( handleObj.namespace ) ) &&
-					( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) ) {
-					handlers.splice( j, 1 );
+					( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) &&
+          handlers.splice( j, 1 );
 
+        if ( spliced && spliced.length > 0 ) {
+          // Will never be reached when processed by uglify-js@2.4.23!
 					if ( handleObj.selector ) {
 						handlers.delegateCount--;
 					}
 					if ( special.remove ) {
 						special.remove.call( elem, handleObj );
 					}
-				}
+        }
 			}
 
 			// Remove generic event handler if we removed something and no more handlers exist
