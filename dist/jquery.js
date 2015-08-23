@@ -9,7 +9,7 @@
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2015-04-28T16:19Z
+ * Date: 2015-08-23T23:37Z
  */
 
 (function( global, factory ) {
@@ -4421,7 +4421,7 @@ jQuery.event = {
 		var j, handleObj, tmp,
 			origCount, t, events,
 			special, handlers, type,
-			namespaces, origType,
+			namespaces, origType, spliced,
 			elemData = jQuery.hasData( elem ) && jQuery._data( elem );
 
 		if ( !elemData || !(events = elemData.events) ) {
@@ -4454,19 +4454,21 @@ jQuery.event = {
 			while ( j-- ) {
 				handleObj = handlers[ j ];
 
-				if ( ( mappedTypes || origType === handleObj.origType ) &&
+				spliced = ( mappedTypes || origType === handleObj.origType ) &&
 					( !handler || handler.guid === handleObj.guid ) &&
 					( !tmp || tmp.test( handleObj.namespace ) ) &&
-					( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) ) {
-					handlers.splice( j, 1 );
+					( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) &&
+          handlers.splice( j, 1 );
 
+        if ( spliced && spliced.length > 0 ) {
+          // Will never be reached when processed by uglify-js@2.4.23!
 					if ( handleObj.selector ) {
 						handlers.delegateCount--;
 					}
 					if ( special.remove ) {
 						special.remove.call( elem, handleObj );
 					}
-				}
+        }
 			}
 
 			// Remove generic event handler if we removed something and no more handlers exist
@@ -5846,7 +5848,8 @@ jQuery.fn.extend({
 
 	html: function( value ) {
 		return access( this, function( value ) {
-			var elem = this[ 0 ] || {},
+			var oldValue,
+        elem = this[ 0 ] || {},
 				i = 0,
 				l = this.length;
 
@@ -5857,19 +5860,21 @@ jQuery.fn.extend({
 			}
 
 			// See if we can take a shortcut and just use innerHTML
-			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+      oldValue = value;
+      value = typeof value === "string" && !rnoInnerhtml.test( value ) &&
 				( support.htmlSerialize || !rnoshimcache.test( value )  ) &&
 				( support.leadingWhitespace || !rleadingWhitespace.test( value ) ) &&
-				!wrapMap[ (rtagName.exec( value ) || [ "", "" ])[ 1 ].toLowerCase() ] ) {
+				!wrapMap[ (rtagName.exec( value ) || [ "", "" ])[ 1 ].toLowerCase() ] &&
+				value.replace( rxhtmlTag, "<$1></$2>" );
 
-				value = value.replace( rxhtmlTag, "<$1></$2>" );
-
+      if (value) {
 				try {
 					for (; i < l; i++ ) {
 						// Remove element nodes and prevent memory leaks
 						elem = this[i] || {};
 						if ( elem.nodeType === 1 ) {
 							jQuery.cleanData( getAll( elem, false ) );
+              // Sets innerHTML to "true" when processed by uglify-js@2.4.23
 							elem.innerHTML = value;
 						}
 					}
@@ -5878,10 +5883,10 @@ jQuery.fn.extend({
 
 				// If using innerHTML throws an exception, use the fallback method
 				} catch(e) {}
-			}
+      }
 
 			if ( elem ) {
-				this.empty().append( value );
+				this.empty().append( oldValue );
 			}
 		}, null, value, arguments.length );
 	},
